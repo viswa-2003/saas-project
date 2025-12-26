@@ -87,7 +87,7 @@ Git for cloning repository
 
 Step-by-Step Setup
 Clone the repository
-git clone <repository-url>
+git clone https://github.com/viswa-2003/saas-project
 cd multi-tenant-saas
 Start all services with a single command
 docker-compose up -d
@@ -1432,7 +1432,7 @@ Search Issues: Check existing GitHub issues
 
 Create Issue: For bugs and feature requests
 
-Contact: [Your Contact Information]
+Contact: vijaytamada333@gmail.com
 
 Community
 GitHub Discussions: For questions and discussions
@@ -1442,7 +1442,7 @@ Issue Tracker: For bug reports
 Pull Requests: For contributions
 
 Video Demo
-A comprehensive video demonstration is available at: [YouTube Demo Link]
+A comprehensive video demonstration is available at: [https://youtu.be/aU1CTmcqEXk]
 
 The video covers:
 
