@@ -110,12 +110,19 @@ const login = async (req, res, next) => {
     }
 
     // Special case: super_admin may not be tied to a tenant
-    const userResult = await pool.query(
-      `SELECT * FROM users
-       WHERE email = $1
-         AND ( (tenant_id = $2 AND role != 'super_admin') OR (tenant_id IS NULL AND role = 'super_admin') )`,
-      [email, tenant.id],
-    );
+   // In login function, replace the user query:
+const userResult = await pool.query(
+  `SELECT * FROM users
+   WHERE email = $1
+     AND (
+       (tenant_id = $2 AND role != 'super_admin') 
+       OR 
+       (tenant_id IS NULL AND role = 'super_admin' AND $2 IS NOT NULL)
+       OR
+       (tenant_id IS NULL AND role = 'super_admin' AND tenantSubdomain IS NULL)
+     )`,
+  [email, tenant?.id],
+);
     if (userResult.rowCount === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials', data: null });
     }
