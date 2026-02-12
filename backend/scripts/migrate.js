@@ -1,14 +1,22 @@
-// backend/scripts/migrate.js
-const pool = require('../src/config/db');
+const fs = require("fs");
+const path = require("path");
+const pool = require("../src/config/db");
 
 (async () => {
   try {
-    // schema is already created by 001_schema.sql; this is just a sanity check
-    await pool.query('SELECT 1');
-    console.log('Migrations completed (schema already applied).');
+    console.log("Running migrations...");
+
+    const sql = fs.readFileSync(
+  path.join(__dirname, "../db/init/001_schema.sql"),
+  "utf8"
+);
+
+
+    await pool.query(sql);
+    console.log("Migrations completed successfully.");
     process.exit(0);
   } catch (err) {
-    console.error('Migration error:', err);
+    console.error("Migration failed:", err);
     process.exit(1);
   }
 })();
