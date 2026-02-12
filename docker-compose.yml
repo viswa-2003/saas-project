@@ -31,18 +31,17 @@ services:
       DB_USER: postgres
       DB_PASSWORD: Vijay@123
       JWT_SECRET: 25311ab69be8bb072301ab337fd0ca92cbe0aac45f4f237f16f16f121dd06c32
-      JWT_EXPIRES_IN: 24h
-      PORT: 5000
-      NODE_ENV: production
       FRONTEND_URL: http://frontend:3000
+      PORT: 5000
     depends_on:
       database:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
-      interval: 10s
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:5000/api/health || exit 1"]
+      interval: 20s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   frontend:
     build: ./frontend

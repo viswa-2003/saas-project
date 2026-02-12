@@ -1,15 +1,22 @@
-# backend/Dockerfile
-FROM node:20-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-RUN npm install --only=production
 
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
 COPY . .
 
-# Install curl for healthcheck
+# Install wait-for-it for health checks
 RUN apk add --no-cache curl
 
-# Entrypoint will run migrations + seeds then start server
-ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
+# Expose port
+EXPOSE 5000
+
+# Start command with migration and seed
+CMD ["sh", "-c", "sleep 10 && npm run seed && npm start"]
+

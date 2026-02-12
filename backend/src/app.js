@@ -14,29 +14,29 @@ const app = express();
 app.use(express.json());
 
 // FIXED CORS CONFIGURATION - Allow multiple origins
-app.use(
-  cors({
-    origin: ['http://localhost:3000', 'http://frontend:3000', 'http://127.0.0.1:3000'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-  }),
-);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
+}));
 
 app.use(morgan('dev'));
 
 // Health check – must reflect DB and migrations/seeds readiness
 app.get('/api/health', async (req, res) => {
   try {
-    const result = await pool.query('SELECT 1');
-    if (result.rowCount === 1) {
-      return res.json({ status: 'ok', database: 'connected' });
-    }
-    return res.status(500).json({ status: 'error', database: 'unhealthy' });
+    await pool.query('SELECT 1');
+    return res.status(200).json({
+      status: "ok",
+      database: "connected"
+    });
   } catch (err) {
-    return res.status(500).json({ status: 'error', database: 'disconnected' });
+    return res.status(500).json({
+      status: "error",
+      database: "disconnected"
+    });
   }
 });
+
 
 // Routes
 app.use('/api/auth', authRoutes);
