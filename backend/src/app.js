@@ -13,7 +13,7 @@ const app = express();
 
 app.use(express.json());
 
-// FIXED CORS CONFIGURATION - Allow multiple origins
+// CORS Configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "https://saas-project-frontend-qa4w.onrender.com"
@@ -21,7 +21,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like Postman, curl)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -31,26 +30,72 @@ app.use(cors({
   credentials: true
 }));
 
-
-
 app.use(morgan('dev'));
 
-// Health check – must reflect DB and migrations/seeds readiness
+// ✅ 1. ROOT ROUTE - Fixes "Cannot GET /"
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'SaaS Project Backend API',
+    version: '1.0.0',
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      auth: {
+        register: 'POST /api/auth/register-tenant',
+        login: 'POST /api/auth/login',
+        me: 'GET /api/auth/me',
+        logout: 'POST /api/auth/logout'
+      }
+    }
+  });
+});
+
+// ✅ 2. API BASE ROUTE
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API is working',
+    routes: ['/auth', '/tenants', '/users', '/projects', '/tasks']
+  });
+});
+
+// Health check
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     return res.status(200).json({
+      success: true,
       status: "ok",
-      database: "connected"
+      database: "connected",
+      timestamp: new Date().toISOString()
     });
   } catch (err) {
+    console.error('Database health check failed:', err.message);
     return res.status(500).json({
+      success: false,
       status: "error",
-      database: "disconnected"
+      database: "disconnected",
+      error: err.message
     });
   }
 });
 
+// ✅ 3. AUTH TEST ROUTE - To verify auth routes are mounted
+app.get('/api/auth/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Auth routes are mounted and working!',
+    availableRoutes: [
+      'POST /api/auth/register-tenant',
+      'POST /api/auth/login',
+      'GET /api/auth/me',
+      'POST /api/auth/logout'
+    ]
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -58,6 +103,23 @@ app.use('/api/tenants', tenantRoutes);
 app.use('/api', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api', taskRoutes);
+
+// ✅ 4. 404 HANDLER - For undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    availableEndpoints: {
+      root: 'GET /',
+      health: 'GET /api/health',
+      auth_test: 'GET /api/auth/test',
+      register: 'POST /api/auth/register-tenant',
+      login: 'POST /api/auth/login',
+      me: 'GET /api/auth/me',
+      logout: 'POST /api/auth/logout'
+    }
+  });
+});
 
 app.use(errorHandler);
 
