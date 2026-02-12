@@ -1,10 +1,13 @@
 // frontend/src/pages/RegisterPage.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
+  const { registerTenant } = useAuth();
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     tenantName: '',
     subdomain: '',
@@ -19,7 +22,6 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -117,38 +119,34 @@ const RegisterPage = () => {
         adminFullName: form.adminFullName.trim(),
       };
       
-      const response = await api.post('/auth/register-tenant', payload);
+      // Use registerTenant from AuthContext
+      const result = await registerTenant(payload);
       
-      setSuccessMsg('Organization registered successfully! Redirecting to login...');
-      
-      // Clear form
-      setForm({
-        tenantName: '',
-        subdomain: '',
-        adminEmail: '',
-        adminFullName: '',
-        adminPassword: '',
-        confirmPassword: '',
-        terms: false,
-      });
-      
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      const msg = err.response?.data?.message || 
-                  err.response?.data?.data?.errors?.[0]?.msg || 
-                  'Registration failed. Please try again.';
-      setError(msg);
-      
-      // Handle specific backend validation errors
-      if (err.response?.data?.errors) {
-        const backendErrors = err.response.data.errors;
-        setValidationErrors(prev => ({
-          ...prev,
-          ...Object.fromEntries(
-            Object.entries(backendErrors).map(([key, value]) => [key, value.msg || value])
-          )
-        }));
+      if (result.success) {
+        // Store registration email for login page
+        localStorage.setItem('registeredEmail', form.adminEmail.trim());
+        localStorage.setItem('registeredSubdomain', form.subdomain.trim().toLowerCase());
+        
+        setSuccessMsg('Organization registered successfully! Redirecting to login...');
+        
+        // Clear form
+        setForm({
+          tenantName: '',
+          subdomain: '',
+          adminEmail: '',
+          adminFullName: '',
+          adminPassword: '',
+          confirmPassword: '',
+          terms: false,
+        });
+        
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(result.error || 'Registration failed. Please try again.');
       }
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -218,8 +216,6 @@ const RegisterPage = () => {
               onChange={handleChange}
               className={`form-input ${validationErrors.subdomain ? 'error' : ''}`}
               placeholder="your-organization"
-              pattern="[a-z0-9-]+"
-              title="Lowercase letters, numbers, and hyphens only"
             />
             <div className="subdomain-preview">
               Your dashboard will be at: <span className="highlight">{form.subdomain || 'your-organization'}</span>.yourapp.com
