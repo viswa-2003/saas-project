@@ -14,13 +14,23 @@ const app = express();
 app.use(express.json());
 
 // FIXED CORS CONFIGURATION - Allow multiple origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://saas-project-frontend-qa4w.onrender.com"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://saas-project-frontend.onrender.com"
-  ],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
+
 
 
 app.use(morgan('dev'));
