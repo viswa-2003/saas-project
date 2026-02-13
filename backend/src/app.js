@@ -32,7 +32,7 @@ app.use(cors({
 
 app.use(morgan('dev'));
 
-// ✅ 1. ROOT ROUTE - Fixes "Cannot GET /"
+// ✅ 1. ROOT ROUTE
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -83,7 +83,7 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// ✅ 3. AUTH TEST ROUTE - To verify auth routes are mounted
+// ✅ 3. AUTH TEST ROUTE
 app.get('/api/auth/test', (req, res) => {
   res.status(200).json({
     success: true,
@@ -104,8 +104,8 @@ app.use('/api', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api', taskRoutes);
 
-// ✅ 4. 404 HANDLER - For undefined routes
-app.use('*', (req, res) => {
+// ✅ 4. FIXED 404 HANDLER - NO WILDCARD '*'
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
